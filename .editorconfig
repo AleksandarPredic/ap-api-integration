@@ -1,0 +1,24 @@
+# EditorConfig helps keep your project formatting consistent.
+# See https://EditorConfig.org
+#
+# PHP PSR-12 Coding Standards
+# https://www.php-fig.org/psr/psr-12/
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.php]
+indent_size = 4
+# PSR-12: no space after unary operators
+ij_php_space_after_unary_not = false
+ij_php_spaces_around_unary_operator = false
+
+[*.md]
+trim_trailing_whitespace = false
