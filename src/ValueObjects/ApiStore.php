@@ -10,6 +10,12 @@ if (!defined('ABSPATH')) {
 
 /**
  * Value object representing a complete store with all its data
+ *
+ * This class uses type-safe collections for tailor prices and department prices.
+ * Collections validate object types during construction and may throw InvalidArgumentException.
+ *
+ * @see ApiTailorPricesCollection
+ * @see ApiPricesPerDepartmentCollection
  */
 class ApiStore
 {
@@ -26,8 +32,9 @@ class ApiStore
      * @param string $phone The phone number
      * @param string $email The email address
      * @param ApiStoreHours $storeHours The store hours
-     * @param ApiTailorPrice[] $tailorPrices Array of tailor prices
-     * @param ApiPricesPerDepartment[] $pricesPerDepartments Array of prices per departments
+     * @param ApiTailorPricesCollection $tailorPrices Collection of tailor prices
+     * @param ApiPricesPerDepartmentCollection $pricesPerDepartments Collection of prices per departments
+     * @throws \InvalidArgumentException When collections are constructed with invalid object types
      */
     public function __construct(
         private readonly string $storeName,
@@ -40,8 +47,8 @@ class ApiStore
         private readonly string $phone,
         private readonly string $email,
         private readonly ApiStoreHours $storeHours,
-        private readonly array $tailorPrices,
-        private readonly array $pricesPerDepartments
+        private readonly ApiTailorPricesCollection $tailorPrices,
+        private readonly ApiPricesPerDepartmentCollection $pricesPerDepartments
     ) {
     }
 
@@ -148,9 +155,9 @@ class ApiStore
     /**
      * Get tailor prices
      *
-     * @return ApiTailorPrice[]
+     * @return ApiTailorPricesCollection
      */
-    public function getTailerPrices(): array
+    public function getTailerPrices(): ApiTailorPricesCollection
     {
         return $this->tailorPrices;
     }
@@ -158,9 +165,9 @@ class ApiStore
     /**
      * Get prices per departments
      *
-     * @return ApiPricesPerDepartment[]
+     * @return ApiPricesPerDepartmentCollection
      */
-    public function getPricesPerDepartments(): array
+    public function getPricesPerDepartments(): ApiPricesPerDepartmentCollection
     {
         return $this->pricesPerDepartments;
     }

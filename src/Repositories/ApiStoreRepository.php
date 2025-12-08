@@ -5,9 +5,11 @@ namespace ApApi\Repositories;
 use ApApi\DataSync\Traits\ApiDataStorageTrait;
 use ApApi\ValueObjects\ApiDepartmentItemPrices;
 use ApApi\ValueObjects\ApiPricesPerDepartment;
+use ApApi\ValueObjects\ApiPricesPerDepartmentCollection;
 use ApApi\ValueObjects\ApiStore;
 use ApApi\ValueObjects\ApiStoreHours;
 use ApApi\ValueObjects\ApiTailorPrice;
+use ApApi\ValueObjects\ApiTailorPricesCollection;
 
 // Do not allow directly accessing this file.
 if (!defined('ABSPATH')) {
@@ -41,6 +43,7 @@ class ApiStoreRepository
      *
      * @param int $branchId The branch ID to search for
      * @return ApiStore|null The store if found, null otherwise
+     * @throws \InvalidArgumentException When store data contains invalid objects for collections
      */
     public function findStoreByBranchId(int $branchId): ?ApiStore
     {
@@ -63,6 +66,7 @@ class ApiStoreRepository
      *
      * @param int[] $branchIds Array of branch IDs to search for
      * @return ApiStore[] Array of found stores (may be fewer than requested if some not found)
+     * @throws \InvalidArgumentException When store data contains invalid objects for collections
      */
     public function findStoresByBranchIds(array $branchIds): array
     {
@@ -91,6 +95,7 @@ class ApiStoreRepository
      * Get all stores as value objects using cached data
      *
      * @return ApiStore[] Array of all stores
+     * @throws \InvalidArgumentException When store data contains invalid objects for collections
      */
     public function getAllStores(): array
     {
@@ -149,6 +154,7 @@ class ApiStoreRepository
      *
      * @param array $data Transformed store data
      * @return ApiStore
+     * @throws \InvalidArgumentException When collection construction fails due to invalid object types
      */
     private function createStoreFromTransformedArray(array $data): ApiStore
     {
@@ -184,16 +190,17 @@ class ApiStoreRepository
             phone: (string) ($data['contact']['phone'] ?? ''),
             email: (string) ($data['contact']['email'] ?? ''),
             storeHours: $storeHours,
-            tailorPrices: $tailerPrices,
-            pricesPerDepartments: $departments
+            tailorPrices: new ApiTailorPricesCollection($tailerPrices),
+            pricesPerDepartments: new ApiPricesPerDepartmentCollection($departments)
         );
     }
 
     /**
-     * Create ApiStoreHours instance from transformed array data
+     * Create ApiStore instance from transformed array data
      *
-     * @param array $data Transformed store hours data
-     * @return ApiStoreHours
+     * @param array $data Transformed store data
+     * @return ApiStore
+     * @throws \InvalidArgumentException When collection construction fails due to invalid object types
      */
     private function createStoreHoursFromTransformedArray(array $data): ApiStoreHours
     {

@@ -463,30 +463,51 @@ class StorePricesPerDepartmentWidget extends StoreBaseWidgetAbstract
         }
 
         // Fetch actual store data from repository
-        $store = $this->repository->findStoreByBranchId((int)$store_id);
-        if ( ! $store && empty($content)) {
+        try {
+            $store = $this->repository->findStoreByBranchId((int)$store_id);
+            if ( ! $store && empty($content)) {
+                ob_start();
+                ?>
+                <div class="mb-store-department-prices__not-found">
+                    <p><?php echo esc_html__('Store not found.', 'ap-api-integration'); ?></p>
+                </div>
+                <?php
+                $content = ob_get_clean();
+            }
+        } catch (\InvalidArgumentException $e) {
+            $this->logger->log(
+                '[WIDGET] [ERROR] Invalid store data format in StorePricesPerDepartmentWidget',
+                [
+                    'store_id' => $store_id,
+                    'widget_class' => get_class($this),
+                    'exception_message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
             ob_start();
             ?>
-            <div class="mb-store-department-prices__not-found">
-                <p><?php echo esc_html__('Store not found.', 'ap-api-integration'); ?></p>
+            <div class="mb-widget-error">
+                <p><?php echo esc_html__('Error: Unable to load store data due to invalid format.', 'ap-api-integration'); ?></p>
             </div>
             <?php
             $content = ob_get_clean();
         }
 
         if (empty($content)) {
-            $departmentPrices = $store->getPricesPerDepartments();
+            $pricesPerDepartmentsCollection = $store->getPricesPerDepartments();
 
             ob_start();
             ?>
             <div class="mb-store-department-prices__info">
-                <?php if (empty($departmentPrices)): ?>
+                <?php if ($pricesPerDepartmentsCollection->isEmpty()): ?>
                     <div class="mb-department-prices__no-data">
                         <p><?php echo esc_html__('No department prices available for this store.', 'ap-api-integration'); ?></p>
                     </div>
                 <?php else: ?>
                     <div class="mb-store-department-prices__list">
-                        <?php foreach ($departmentPrices as $department): ?>
+                        <?php foreach ($pricesPerDepartmentsCollection as $department): ?>
                             <div class="mb-store-department-prices__section">
                                 <div class="mb-store-department-prices__title"><?php echo esc_html($department->getDepartmentName()); ?></div>
                                 <ul class="mb-store-department-prices__items">
