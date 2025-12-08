@@ -131,7 +131,21 @@ class ApiSyncCron
 
             // We will create new cache while generating all stores.
             // Run validation if we can create all VOs
-            $repository->getAllStores();
+            try {
+                $repository->getAllStores();
+            } catch (\InvalidArgumentException $exception) {
+                $this->logger->log(
+                    '[FETCH] [TRANSFORMATION] [VALIDATION] [ERROR] Invalid store data format during transformation: ' . $exception->getMessage(),
+                    [
+                        'exception_type' => get_class($exception),
+                        'file' => $exception->getFile(),
+                        'line' => $exception->getLine(),
+                        'trace' => $exception->getTraceAsString()
+                    ]
+                );
+                // Rethrow so outer catch can handle it
+                throw $exception;
+            }
 
             // Save transformed data with branchId as keys using trait method
             $this->storeTransformedApiData($transformedData, false);

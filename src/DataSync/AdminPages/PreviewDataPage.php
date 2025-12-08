@@ -4,6 +4,7 @@ namespace ApApi\DataSync\AdminPages;
 
 use ApApi\Repositories\ApiStoreRepository;
 use ApApi\Traits\SingletonTrait;
+use ApApi\Logger\Logger;
 
 // Do not allow directly accessing this file.
 if ( ! defined('ABSPATH')) {
@@ -312,6 +313,20 @@ class PreviewDataPage
                 }
             }
 
+        } catch (\InvalidArgumentException $e) {
+            $logger = Logger::getInstance();
+            $logger->log(
+                '[PREVIEW] [ERROR] Invalid store data format detected',
+                [
+                    'exception_message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
+            echo '<p class="ap-error-message">' .
+                 esc_html__('Invalid store data format detected. Please check data source: ', 'ap-api-integration') .
+                 esc_html($e->getMessage()) . '</p>';
         } catch (\Exception $e) {
             echo '<p class="ap-error-message">' .
                  esc_html__('Error loading store data: ', 'ap-api-integration') .

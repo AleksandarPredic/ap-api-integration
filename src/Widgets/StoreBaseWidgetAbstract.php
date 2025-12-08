@@ -4,6 +4,7 @@ namespace ApApi\Widgets;
 
 use Elementor\Widget_Base;
 use ApApi\Repositories\ApiStoreRepository;
+use ApApi\Logger\Logger;
 
 abstract class StoreBaseWidgetAbstract extends Widget_Base
 {
@@ -15,12 +16,20 @@ abstract class StoreBaseWidgetAbstract extends Widget_Base
     protected ApiStoreRepository $repository;
 
     /**
+     * Logger instance
+     *
+     * @var Logger
+     */
+    protected Logger $logger;
+
+    /**
      * Constructor
      */
     public function __construct($data = [], $args = null)
     {
         parent::__construct($data, $args);
         $this->repository = new ApiStoreRepository();
+        $this->logger = Logger::getInstance();
     }
 
     /**
@@ -102,16 +111,30 @@ abstract class StoreBaseWidgetAbstract extends Widget_Base
             ]
         );
 
-        $allStores = $this->repository->getAllStores();
+        try {
+            $allStores = $this->repository->getAllStores();
 
-        // Create options array from stores (ID => Name)
-        $storeOptions = [];
-        foreach ($allStores as $store) {
-            $storeOptions[$store->getBranchId()] = $store->getStoreName();
+            // Create options array from stores (ID => Name)
+            $storeOptions = [];
+            foreach ($allStores as $store) {
+                $storeOptions[$store->getBranchId()] = $store->getStoreName();
+            }
+
+            // Sort $storeOptions by value name
+            asort($storeOptions);
+        } catch (\InvalidArgumentException $e) {
+            $this->logger->log(
+                '[WIDGET] [ERROR] Invalid store data format in widget controls',
+                [
+                    'widget_class' => get_class($this),
+                    'exception_message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
+            $storeOptions = [0 => esc_html__('Error: Invalid store data format', 'ap-api-integration')];
         }
-
-        // Sort $storeOptions by value name
-        asort($storeOptions);
 
         $this->add_control(
             'store_id',

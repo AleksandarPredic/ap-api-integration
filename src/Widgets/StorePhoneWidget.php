@@ -2,8 +2,8 @@
 
 namespace ApApi\Widgets;
 
-use Elementor\Controls_Manager;
 use ApApi\Widgets\Traits\StoreTrait;
+use Elementor\Controls_Manager;
 
 // Do not allow directly accessing this file.
 if ( ! defined('ABSPATH')) {
@@ -211,12 +211,33 @@ class StorePhoneWidget extends StoreBaseWidgetAbstract
         }
 
         // Fetch actual store data from repository
-        $store = $this->repository->findStoreByBranchId((int)$store_id);
-        if ( ! $store && empty($content)) {
+        try {
+            $store = $this->repository->findStoreByBranchId((int)$store_id);
+            if ( ! $store && empty($content)) {
+                ob_start();
+                ?>
+                <div class="mb-store-phone__not-found">
+                    <p><?php echo esc_html__('Store not found.', 'ap-api-integration'); ?></p>
+                </div>
+                <?php
+                $content = ob_get_clean();
+            }
+        } catch (\InvalidArgumentException $e) {
+            $this->logger->log(
+                '[WIDGET] [ERROR] Invalid store data format in StorePhoneWidget',
+                [
+                    'store_id' => $store_id,
+                    'widget_class' => get_class($this),
+                    'exception_message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            );
             ob_start();
             ?>
-            <div class="mb-store-phone__not-found">
-                <p><?php echo esc_html__('Store not found.', 'ap-api-integration'); ?></p>
+            <div class="mb-widget-error">
+                <p><?php echo esc_html__('Error: Unable to load store data due to invalid format.', 'ap-api-integration'); ?></p>
             </div>
             <?php
             $content = ob_get_clean();
